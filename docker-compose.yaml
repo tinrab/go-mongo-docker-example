@@ -9,6 +9,15 @@ services:
       - ./api:/go/src/app
     depends_on:
       - mongo
+  web:
+    container_name: web
+    image: nginx:latest
+    ports:
+      - 8081:80
+    volumes:
+      - ./web:/usr/share/nginx/html
+    depends_on:
+      - api
   mongo:
     image: mongo:latest
     container_name: mongo

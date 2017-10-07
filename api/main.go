@@ -15,8 +15,8 @@ import (
 )
 
 type Post struct {
-	Text      string    `json:"text"`
-	CreatedAt time.Time `json:"createdAt"`
+	Text      string    `json:"text" bson:"text"`
+	CreatedAt time.Time `json:"createdAt" bson:"created_at"`
 }
 
 var posts *mgo.Collection
@@ -73,7 +73,7 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 
 func readPosts(w http.ResponseWriter, r *http.Request) {
 	result := []Post{}
-	if err := posts.Find(nil).Sort("-createdAt").All(&result); err != nil {
+	if err := posts.Find(nil).Sort("-created_at").All(&result); err != nil {
 		responseError(w, err.Error(), http.StatusInternalServerError)
 	} else {
 		responseJSON(w, result)

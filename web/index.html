@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Dockerized Posts</title>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</head>
+
+<body>
+  <h1>Dockerized Posts</h1>
+  <form id="form">
+    <input type="text"
+           placeholder="New post..."
+           id="post-input">
+  </form>
+  <div id="posts"></div>
+  <script>
+    $(document).ready(function() {
+      $.get('http://localhost:8080/posts', function(posts) {
+        $list = $('#posts');
+        for (var i = 0; i < posts.length; i++) {
+          $list.append('<p>' + posts[i].text + '</p>');
+        }
+      });
+      $('#form').submit(function(event) {
+        event.preventDefault();
+        var text = $('#post-input').val();
+        $.post(
+          'http://localhost:8080/posts',
+          JSON.stringify({text: text}),
+          function() {
+            location.reload();
+          }
+        );
+      });
+    });
+  </script>
+</body>
+
+</html>
