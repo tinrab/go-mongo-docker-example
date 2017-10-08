@@ -26,6 +26,7 @@ func main() {
 	session, err := mgo.Dial("mongo:27017")
 	if err != nil {
 		log.Fatalln(err)
+		log.Fatalln("mongo err")
 		os.Exit(1)
 	}
 	defer session.Close()
