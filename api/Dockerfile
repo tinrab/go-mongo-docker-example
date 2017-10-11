@@ -1,5 +1,8 @@
 FROM golang:1.8
 
+RUN adduser --disabled-password --gecos '' api
+USER api
+
 WORKDIR /go/src/app
 COPY . .
 
