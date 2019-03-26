@@ -1,4 +1,4 @@
-FROM golang:1.8
+FROM golang:1.12.1
 
 RUN adduser --disabled-password --gecos '' api
 USER api
@@ -7,7 +7,6 @@ WORKDIR /go/src/app
 COPY . .
 
 RUN go get github.com/pilu/fresh
-RUN go-wrapper download
-RUN go-wrapper install
+RUN go get ./...
 
 CMD [ "fresh" ]
