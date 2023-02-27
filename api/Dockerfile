@@ -1,4 +1,4 @@
-FROM golang:1.12.1
+FROM golang:1.20
 
 RUN adduser --disabled-password --gecos '' api
 USER api
@@ -7,6 +7,6 @@ WORKDIR /go/src/app
 COPY . .
 
 RUN go get github.com/pilu/fresh
-RUN go get ./...
+RUN go install github.com/pilu/fresh
 
 CMD [ "fresh" ]
