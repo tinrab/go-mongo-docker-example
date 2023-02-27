@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -9,9 +10,11 @@ import (
 	"time"
 
 	"github.com/rs/cors"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2"
 )
 
 type Post struct {
@@ -19,21 +22,26 @@ type Post struct {
 	CreatedAt time.Time `json:"createdAt" bson:"created_at"`
 }
 
-var posts *mgo.Collection
+var coll *mongo.Collection
 
 func main() {
+	log.Println("enter main - connecting to mongo")
 	// Connect to mongo
-	session, err := mgo.Dial("mongo:27017")
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI("mongodb://mongo"))
+
 	if err != nil {
 		log.Fatalln(err)
 		log.Fatalln("mongo err")
 		os.Exit(1)
 	}
-	defer session.Close()
-	session.SetMode(mgo.Monotonic, true)
+	defer func() {
+		if err := client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
 
 	// Get posts collection
-	posts = session.DB("app").C("posts")
+	coll = client.Database("app").Collection("posts")
 
 	// Set up routes
 	r := mux.NewRouter()
@@ -64,7 +72,7 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 	post.CreatedAt = time.Now().UTC()
 
 	// Insert new post
-	if err := posts.Insert(post); err != nil {
+	if _, err := coll.InsertOne(context.TODO(), post); err != nil {
 		responseError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -74,9 +82,17 @@ func createPost(w http.ResponseWriter, r *http.Request) {
 
 func readPosts(w http.ResponseWriter, r *http.Request) {
 	result := []Post{}
-	if err := posts.Find(nil).Sort("-created_at").All(&result); err != nil {
+	if cursor, err := coll.Find(context.TODO(), bson.D{}); err != nil {
 		responseError(w, err.Error(), http.StatusInternalServerError)
 	} else {
+		for cursor.Next(context.TODO()) {
+			var elem Post
+			err := cursor.Decode(&elem)
+			if err != nil {
+				log.Fatal(err)
+			}
+			result = append(result, elem)
+		}
 		responseJSON(w, result)
 	}
 }
